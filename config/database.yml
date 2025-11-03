@@ -81,6 +81,7 @@ test:
 production:
   primary: &primary_production
     <<: *default
+    host: <%= ENV["DB_HOST"] %>
     database: recipebook_webapp_production
     username: recipebook_webapp
     password: <%= ENV["RECIPEBOOK_WEBAPP_DATABASE_PASSWORD"] %>
@@ -92,6 +93,7 @@ production:
     <<: *primary_production
     database: recipebook_webapp_production_queue
     migrations_paths: db/queue_migrate
+    
   cable:
     <<: *primary_production
     database: recipebook_webapp_production_cable
