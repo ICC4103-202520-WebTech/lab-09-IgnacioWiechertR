@@ -2,7 +2,7 @@
 service: my-app
 
 # Name of the container image.
-image: lab-09-wiechert/my-app
+image: ignaciowiechert/lab09
 
 # Deploy to these servers.
 servers:
@@ -25,7 +25,9 @@ proxy:
 
 # Credentials for your image host.
 registry:
-  server: localhost:5555
+  server: registry.hub.docker.com
+  username: 
+    - KAMAL_REGISTRY_USERNAME
   # Specify the registry server, if you're not using Docker Hub
   # server: registry.digitalocean.com / ghcr.io / ...
   # username: my-user
@@ -47,15 +49,11 @@ builder:
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 #
 env:
-  clear:
-    # Dile a Rails la IP del servidor de la BD. 
-    # En este caso, es el mismo servidor.
-    DB_HOST: 104.248.177.200 
+#   clear:
+#     DB_HOST: 192.168.0.2
   secret:
     - RAILS_MASTER_KEY
-    - SECRET_KEY_BASE
-    # Añade la contraseña que tu app Rails usará
-    - RECIPEBOOK_WEBAPP_DATABASE_PASSWORD 
+    - DATABASE_URL
 
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
 # "bin/kamal app logs -r job" will tail logs from the first server in the job section.
@@ -87,25 +85,24 @@ env:
 
 # Use accessory services (secrets come from .kamal/secrets).
 #
-# Inject ENV variables into containers (secrets come from .kamal/secrets).
-#
-
-
-# ... (omite las otras secciones) ...
-
-# Use accessory services (secrets come from .kamal/secrets).
-#
-accessories:
-  db:
-    image: postgres:16 # Puedes usar la versión de Postgres que prefieras
-    host: 104.248.177.200
-    port: 5432
-    env:
-      secret:
-        # Estas variables configuran el contenedor de PostgreSQL
-        - POSTGRES_DB
-        - POSTGRES_USER
-        - POSTGRES_PASSWORD
-    directories:
-      # Esto guarda tus datos de forma persistente en el servidor
-      - data:/var/lib/postgresql/data
+# accessories:
+#   db:
+#     image: mysql:8.0
+#     host: 192.168.0.2
+#     port: 3306
+#     env:
+#       clear:
+#         MYSQL_ROOT_HOST: '%'
+#       secret:
+#         - MYSQL_ROOT_PASSWORD
+#     files:
+#       - config/mysql/production.cnf:/etc/mysql/my.cnf
+#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
+#     directories:
+#       - data:/var/lib/mysql
+#   redis:
+#     image: valkey/valkey:8
+#     host: 192.168.0.2
+#     port: 6379
+#     directories:
+#       - data:/data
