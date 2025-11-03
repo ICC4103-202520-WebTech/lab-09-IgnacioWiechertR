@@ -1,0 +1,8 @@
+# 104.248.177.200
+
+# i used Docker Hub 
+
+# masterkey: 94843449277fc6682c9c3e816f9e95f0
+# KAMAL_REGISTRY_PASSWORD=$dckr_pat_NU0TuYtEHFxIIFehApohFx_YMTM
+# KAMAL_REGISTRY_USERNAME=ignaciowiechert
+# DATABASE_URL=$postgres://lab09:1234@104.248.177.200:5432/lab09_production"

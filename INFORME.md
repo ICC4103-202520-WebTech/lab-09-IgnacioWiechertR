@@ -1,170 +1,175 @@
-Informe de Despliegue: Implementación de Aplicación Rails con Kamal
-Proyecto: lab-09-IgnacioWiechertR Servidor: 104.248.177.200 (DigitalOcean) Tecnologías Clave: Ruby on Rails, Kamal, Docker, PostgreSQL
+Deployment Report: Rails Application Implementation with Kamal
 
-Introducción
-Este documento detalla el proceso de despliegue de una aplicación Ruby on Rails desde un entorno de desarrollo local a un servidor de producción (Droplet de DigitalOcean) utilizando la herramienta de despliegue Kamal. El informe cubre la configuración inicial del entorno, la instalación de dependencias, la configuración de la base de datos y la resolución de varios problemas críticos que surgieron durante el proceso.
+Project: lab-09-IgnacioWiechertR Server: 104.248.177.200 (DigitalOcean) Key Technologies: Ruby on Rails, Kamal, Docker, PostgreSQL
 
-Fase 1: Configuración del Entorno Local y del Servidor
-El proceso comenzó con la configuración de Kamal en la máquina de desarrollo y la preparación del servidor de destino con Docker.
+Introduction
 
-1.1. Inicialización de Kamal (Local)
-El primer paso fue instalar e inicializar Kamal en el proyecto local:
+This document details the deployment process of a Ruby on Rails application from a local development environment to a production server (DigitalOcean Droplet) using the Kamal deployment tool. The report covers the initial environment setup, dependency installation, database configuration, and the resolution of several critical issues encountered during the process.
 
-Bash
+Phase 1: Local Environment and Server Setup
 
-gem install kamal
-kamal init
-1.2. Instalación y Configuración de Docker (Servidor)
-El servidor de destino requería Docker. La instalación inicial falló al intentar localizar el paquete docker-buildx-plugin, indicando que los repositorios estándar de Ubuntu no contenían las dependencias necesarias.
+The process began with configuring Kamal on the development machine and preparing the target server with Docker.
 
-Resolución: Se agregaron los repositorios oficiales de Docker al servidor:
+1.1. Kamal Initialization (Local)
 
-Bash
+The first step was to install and initialize Kamal in the local project:
 
-# 1. Instalar prerrequisitos para repositorios HTTPS
+gem install kamal kamal init
+
+1.2. Docker Installation and Configuration (Server)
+
+The target server required Docker. The initial installation failed while trying to locate the docker-buildx-plugin package, indicating that the standard Ubuntu repositories did not contain the necessary dependencies.
+
+Resolution: Docker's official repositories were added to the server:
+
+1. Install prerequisites for HTTPS repositories
 sudo apt-get install ca-certificates curl gnupg lsb-release
 
-# 2. Agregar la clave GPG oficial de Docker
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+2. Add Docker's official GPG key
+sudo mkdir -p /etc/apt/keyrings curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-# 3. Configurar el repositorio "stable"
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+3. Set up the "stable" repository
+echo
 
-# 4. Instalar las dependencias de Docker
-sudo apt update
-sudo apt install docker-buildx-plugin
-1.3. Problema de Permisos de Docker (Servidor)
-Tras la instalación, se verificó la conectividad con el servidor (ssh root@104.248.177.200) y se confirmó que Docker estaba instalado (docker ps). Sin embargo, surgieron problemas de permisos al intentar ejecutar comandos de Docker como usuario no-root.
+"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu
 
-Resolución: El usuario local (ignac) fue agregado al grupo docker en el servidor, eliminando la necesidad de usar sudo para cada comando de Docker.
+$(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-Bash
+4. Install Docker dependencies
+sudo apt update sudo apt install docker-buildx-plugin
 
-# Se verificó si el grupo existía (getent group docker) o se creó (sudo groupadd docker)
+1.3. Docker Permissions Issue (Server)
+
+After installation, server connectivity was verified (ssh root@104.248.177.200), and Docker was confirmed to be installed (docker ps). However, permission issues arose when trying to run Docker commands as a non-root user.
+
+Resolution: The local user (ignac) was added to the docker group on the server, eliminating the need for sudo with every Docker command.
+
+Checked if the group existed (getent group docker) or created it (sudo groupadd docker)
 sudo usermod -aG docker $USER
-Fase 2: Aprovisionamiento de la Base de Datos PostgreSQL
-La aplicación requería una base de datos PostgreSQL, que no estaba preinstalada en el servidor.
 
-2.1. Instalación de PostgreSQL (Servidor)
-Se instaló el servicio de PostgreSQL directamente en el sistema operativo del host:
+Phase 2: Provisioning the PostgreSQL Database
 
-Bash
+The application required a PostgreSQL database, which was not pre-installed on the server.
+
+2.1. PostgreSQL Installation (Server)
+
+The PostgreSQL service was installed directly on the host operating system:
 
 sudo apt install -y postgresql
-2.2. Configuración de Acceso Remoto
-Por defecto, PostgreSQL solo escucha conexiones de localhost. Fue necesario configurarlo para aceptar conexiones desde el contenedor Docker de la aplicación.
 
-Resolución: Se modificaron dos archivos de configuración clave de PostgreSQL:
+2.2. Remote Access Configuration
 
-postgresql.conf: Se actualizó la directiva listen_addresses para aceptar conexiones desde cualquier IP.
+By default, PostgreSQL only listens for localhost connections. It needed to be configured to accept connections from the application's Docker container.
 
-Archivo: /etc/postgresql/17/main/postgresql.conf
+Resolution: Two key PostgreSQL configuration files were modified:
 
-Cambio: listen_addresses = '*'
+postgresql.conf: The listen_addresses directive was updated to accept connections from any IP.
 
-pg_hba.conf: Se agregó una regla para permitir la autenticación md5 desde todas las direcciones IP. Si bien esta configuración es altamente permisiva y no se recomienda para entornos de producción críticos, fue un paso necesario para validar la conectividad durante la depuración.
+File: /etc/postgresql/17/main/postgresql.conf
 
-Archivo: /etc/postgresql/17/main/pg_hba.conf
+Change: listen_addresses = '*'
 
-Línea Agregada: host all all 0.0.0.0/0 md5
+pg_hba.conf: A rule was added to allow md5 authentication from all IP addresses. While this configuration is highly permissive and not recommended for critical production environments, it was a necessary step to validate connectivity during debugging.
 
-Tras los cambios, se reinició el servicio:
+File: /etc/postgresql/17/main/pg_hba.conf
 
-Bash
+Line Added: host all all 0.0.0.0/0 md5
+
+After the changes, the service was restarted:
 
 systemctl restart postgresql
-2.3. Creación y Verificación de la Base de Datos
-Se creó la base de datos de producción y se verificó el acceso localmente en el servidor:
 
-Bash
+2.3. Database Creation and Verification
 
-# Creación de la base de datos y usuario (asumido desde el string de conexión)
-sudo -u postgres psql
-CREATE DATABASE lab09_production;
-CREATE USER lab09 WITH PASSWORD '1234';
-GRANT ALL PRIVILEGES ON DATABASE lab09_production TO lab09;
+The production database was created, and access was verified locally on the server:
 
-# Verificación de conectividad en el host
+Create the database and user (assumed from connection string)
+sudo -u postgres psql CREATE DATABASE lab09_production; CREATE USER lab09 WITH PASSWORD '1234'; GRANT ALL PRIVILEGES ON DATABASE lab09_production TO lab09;
+
+Verify connectivity on the host
 psql "postgres://lab09:1234@127.0.0.1:5432/lab09_production"
-Esta verificación local en el servidor fue exitosa.
 
-Fase 3: Configuración de la Aplicación Kamal
-Con los servicios del servidor listos, la configuración se centró en el archivo config/deploy.yml de Kamal y la gestión de credenciales.
+This local verification on the server was successful.
 
-3.1. Aprovisionamiento del Servidor y SSH
-Se generó un nuevo par de claves SSH (ssh-keygen) y la clave pública (~/.ssh/id_ed25519.pub) se agregó al Droplet de DigitalOcean para permitir la autenticación sin contraseña.
+Phase 3: Kamal Application Configuration
 
-3.2. Configuración de deploy.yml
-Se realizaron varias modificaciones clave en config/deploy.yml:
+With the server services ready, configuration focused on Kamal's config/deploy.yml file and credential management.
 
-Se configuró la IP del servidor: servers: web: - 104.248.177.200
+3.1. Server Provisioning and SSH
 
-Se deshabilitó SSL: proxy: ssl: false
+A new SSH key pair was generated (ssh-keygen), and the public key (~/.ssh/id_ed25519.pub) was added to the DigitalOcean Droplet to allow passwordless authentication.
 
-Se configuró el host del proxy a la IP: host: 104.248.177.200
+3.2. deploy.yml Configuration
 
-Se actualizaron las credenciales del registry para apuntar a un repositorio de Docker Hub (registry.hub.docker.com).
+Several key modifications were made to config/deploy.yml:
 
-3.3. Problema de Contexto del Dockerfile
-Durante los intentos iniciales de kamal setup, la compilación de la imagen fallaba, reportando que no podía localizar el Dockerfile, a pesar de que existía en la raíz del proyecto.
+Server IP was set: servers: web: - 104.248.177.200
 
-Resolución: El problema se resolvió especificando explícitamente las rutas de contexto y del Dockerfile en config/deploy.yml, forzando a Kamal a reconocerlas:
+SSL was disabled: proxy: ssl: false
 
-YAML
+Proxy host was set to the IP: host: 104.248.177.200
 
-builder:
-  context: .
-  dockerfile: ./Dockerfile
-3.4. Gestión de Credenciales (Secrets)
-Las credenciales (RAILS_MASTER_KEY, DATABASE_URL, y las credenciales de Docker Hub) se gestionaron utilizando el sistema de "secrets" de Kamal. La RAILS_MASTER_KEY se obtuvo con bin/rails credentials:show.
+Registry credentials were updated to point to a Docker Hub repository (https://www.google.com/search?q=registry.hub.docker.com).
 
-Fase 4: Despliegue y Resolución de Problemas Críticos
-El comando kamal deploy se ejecutó, pero la aplicación fallaba al arrancar, lo que llevó a una fase intensiva de depuración.
+3.3. Dockerfile Context Issue
 
-Problema 1: Error de DATABASE_URL (Connection Refused)
-Aunque el despliegue inicial parecía funcionar, los logs de la aplicación mostraron que el contenedor web no podía conectarse a la base de datos y entraba en un bucle de reinicio.
+During initial kamal setup attempts, the image build failed, reporting it could not locate the Dockerfile despite its existence in the project root.
 
-Diagnóstico: El análisis de las credenciales reveló que el DATABASE_URL configurado localmente (y enviado al servidor) era: postgres://lab09:1234@127.0.0.1:5432/lab09_production
+Resolution: The issue was resolved by explicitly specifying the context and Dockerfile paths in config/deploy.yml, forcing Kamal to recognize them:
 
-Análisis del Problema: Este es un error común de redes en contenedores. El host 127.0.0.1 (localhost) dentro del contenedor de la aplicación se refiere al propio contenedor, no al servidor host donde reside el servicio de PostgreSQL.
+builder: context: . dockerfile: ./Dockerfile
 
-Resolución: El DATABASE_URL se corrigió en el archivo .env local para que apuntara a la IP pública del servidor, permitiendo que el contenedor resolviera la dirección correctamente:
+3.4. Credential Management (Secrets)
+
+Credentials (RAILS_MASTER_KEY, DATABASE_URL, and Docker Hub credentials) were managed using Kamal's secrets system. The RAILS_MASTER_KEY was obtained with bin/rails credentials:show.
+
+Phase 4: Deployment and Critical Issue Resolution
+
+The kamal deploy command was executed, but the application failed to boot, leading to an intensive debugging phase.
+
+Problem 1: DATABASE_URL Error (Connection Refused)
+
+Although the initial deployment seemed to work, application logs showed the web container could not connect to the database and was stuck in a restart loop.
+
+Diagnosis: Analysis of the credentials revealed the DATABASE_URL configured locally (and pushed to the server) was: postgres://lab09:1234@127.0.0.1:5432/lab09_production
+
+Problem Analysis: This is a common container networking error. The host 127.0.0.1 (localhost) inside the application container refers to the container itself, not the host server where the PostgreSQL service resides.
+
+Resolution: The DATABASE_URL was corrected in the local .env file to point to the server's public IP, allowing the container to resolve the address correctly:
 
 export DATABASE_URL="postgres://lab09:1234@104.248.177.200:5432/lab09_production"
 
-Tras un kamal env push y kamal deploy, la aplicación pudo conectarse a la base de datos.
+After a kamal env push and kamal deploy, the application successfully connected to the database.
 
-Problema 2: Fallo de Formularios POST (InvalidAuthenticityToken)
-La aplicación se desplegó y era accesible en http://104.248.177.200. Sin embargo, todos los formularios que utilizaban POST (específicamente "Log In" y "Sign Up" de Devise) fallaban.
+Problem 2: Form POST Failure (InvalidAuthenticityToken)
 
-Diagnóstico: El análisis de los logs de Rails (kamal app logs -f) reveló el error subyacente: ActionController::InvalidAuthenticityToken (HTTP Origin header (http://104.248.177.200) didn't match request.base_url (https://104.248.177.200))
+The application was deployed and accessible at http://104.248.177.200. However, all forms using POST (specifically Devise's "Log In" and "Sign Up") were failing.
 
-Análisis del Problema: La configuración de producción por defecto de Rails (config/environments/production.rb) incluye config.assume_ssl = true. Esto le indica a Rails que asuma que está detrás de un proxy SSL, haciendo que genere su base_url como https://....
+Diagnosis: Analysis of the Rails logs (kamal app logs -f) revealed the underlying error: ActionController::InvalidAuthenticityToken (HTTP Origin header (http://104.248.177.200) didn't match request.base_url (https://104.248.177.200))
 
-El navegador, accediendo vía http://..., enviaba un Origin header de http://.... Cuando Rails comparaba el Origin (http) con su base_url (https), el desajuste provocaba que la protección CSRF bloqueara la solicitud.
+Problem Analysis: The default Rails production configuration (config/environments/production.rb) includes config.assume_ssl = true. This instructs Rails to assume it is behind an SSL proxy, causing it to generate its base_url as https://...
 
-Resolución: Dado que este despliegue no utilizaba SSL, fue necesario alinear la configuración de Rails con la realidad del entorno. Se modificó config/environments/production.rb para deshabilitar los supuestos de SSL:
+The browser, accessing via http://..., sent an Origin header of http://.... When Rails compared the Origin (http) with its base_url (https), the mismatch caused the CSRF protection to block the request.
 
-Ruby
+Resolution: Given that this deployment was not using SSL, the Rails configuration needed to be aligned with the environment's reality. config/environments/production.rb was modified to disable SSL assumptions:
 
-# config/environments/production.rb
-
-# Se cambió de 'true' a 'false'
+config/environments/production.rb
+Changed from 'true' to 'false'
 config.assume_ssl = false
 
-# Se confirmó que esta línea también estaba en 'false'
+Confirmed this line was also 'false'
 config.force_ssl = false
-Nota Importante: Todos los cambios en los archivos de configuración debían ser confirmados (commiteados) en el repositorio local antes de ejecutar kamal deploy para asegurar que Kamal compilara una nueva imagen con los cambios aplicados.
 
-Conclusión
-Tras modificar la configuración de SSL en el entorno de producción y redesplegar, la discrepancia entre el Origin y el base_url fue resuelta. Los formularios de autenticación comenzaron a funcionar correctamente, y la aplicación quedó totalmente operativa en el servidor.
+Important Note: All configuration file changes had to be committed to the local repository before running kamal deploy to ensure Kamal would build a new image with the applied changes.
 
-El proceso completo subraya la importancia crítica de la configuración de red (IPs públicas vs. localhost) y la necesidad de una configuración de SSL coherente en todo el stack (Proxy, Kamal y Rails) para evitar conflictos de seguridad CSRF.
+Conclusion
 
-Recurso Adicional
-Durante la fase de depuración, el siguiente recurso fue fundamental para identificar y resolver varios de los problemas encontrados:
+After modifying the SSL configuration in the production environment and redeploying, the discrepancy between the Origin and base_url was resolved. The authentication forms began working correctly, and the application became fully operational on the server.
+
+The entire process highlights the critical importance of network configuration (public IPs vs. localhost) and the need for a coherent SSL configuration across the entire stack (Proxy, Kamal, and Rails) to prevent CSRF security conflicts.
+
+Additional Resource
+
+During the debugging phase, the following resource was instrumental in identifying and resolving several of the issues encountered:
 
 https://www.youtube.com/watch?v=sPUk9-1WVXI
