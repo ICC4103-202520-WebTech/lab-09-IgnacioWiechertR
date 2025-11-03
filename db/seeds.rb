@@ -39,5 +39,5 @@ recipe2 = Recipe.create!(
     4. Divide noodles into bowls and pour hot broth on top.<br>
     5. Garnish with nori sheets and sesame seeds before serving.
   INSTR
-  user: regular
+  user: regular_user
 )
