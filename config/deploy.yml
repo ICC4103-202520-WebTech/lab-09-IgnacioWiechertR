@@ -2,7 +2,7 @@
 service: my-app
 
 # Name of the container image.
-image: lab-09-Wiechert/my-app
+image: lab-09-wiechert/my-app
 
 # Deploy to these servers.
 servers:
