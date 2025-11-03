@@ -1,17 +1,9 @@
 <body class="bg-light">
-  <div class="container">
-    <% if notice %>
-      <div class="alert alert-success"><%= notice %></div>
-    <% end %>
-
-    <%= yield %> 
-  </div>
-
-  <div class="container my-4">
+  <div class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="text-dark">All Recipes</h1>
+      <h1 class="fw-bold text-dark">All Recipes</h1>
       <% if user_signed_in? %>
-        <%= link_to "New Recipe", new_recipe_path, class: "btn btn-secondary" %>
+        <%= link_to "➕ New Recipe", new_recipe_path, class: "btn btn-primary shadow-sm" %>
       <% end %>
     </div>
 
@@ -19,17 +11,21 @@
       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         <% @recipes.each do |recipe| %>
           <div class="col">
-            <div class="card h-100 shadow-sm border-0">
+            <div class="card h-100 shadow-sm border-0 transition hover-shadow">
               <div class="card-body">
-                <h5 class="card-title"><%= recipe.title %></h5>
-                <p class="card-text text-muted small mb-3">Cook Time: <strong><%= recipe.cook_time %> min</strong></p>
-                <p class="card-text text-muted small mb-3">Difficulty: <strong><%= recipe.difficulty %></strong></p>
+                <h5 class="card-title fw-semibold"><%= recipe.title %></h5>
+                <p class="card-text text-muted small mb-1">⏱️ <strong><%= recipe.cook_time %> min</strong></p>
+                <p class="card-text text-muted small mb-3">🔥 <strong><%= recipe.difficulty %></strong></p>
 
-                <div class="d-flex justify-content-between align-items-center">
-                  <%= link_to "View Recipe", recipe, class: "btn btn-secondary btn-sm" %>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                  <%= link_to "View", recipe, class: "btn btn-outline-primary btn-sm" %>
                   <% if user_signed_in? %>
-                    <%= link_to "Edit", edit_recipe_path(recipe), class: "btn btn-warning btn-sm" %>
-                    <%= link_to "Delete", recipe, data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this recipe?" }, class: "btn btn-danger btn-sm" %>
+                    <div class="btn-group">
+                      <%= link_to "Edit", edit_recipe_path(recipe), class: "btn btn-outline-warning btn-sm" %>
+                      <%= link_to "Delete", recipe,
+                          data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this recipe?" },
+                          class: "btn btn-outline-danger btn-sm" %>
+                    </div>
                   <% end %>
                 </div>
               </div>
@@ -38,10 +34,10 @@
         <% end %>
       </div>
     <% else %>
-      <div class="alert alert-info text-center" role="alert">
+      <div class="alert alert-info text-center mt-4">
         There are no recipes yet! 
         <% if user_signed_in? %>
-          <%= link_to "Be the first to create one.", new_recipe_path %>
+          <%= link_to "Be the first to create one.", new_recipe_path, class: "fw-semibold text-decoration-none" %>
         <% end %>
       </div>
     <% end %>

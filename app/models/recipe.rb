@@ -1,7 +1,6 @@
 class Recipe < ApplicationRecord
-    validates :title, presence: true
-    belongs_to :user
+  belongs_to :user
+  has_rich_text :instructions
 
-    has_rich_text :instructions
-
+  validates :title, presence: true, uniqueness: true
 end

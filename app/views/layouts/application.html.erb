@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Recipebook Webapp" %></title>
+    <title><%= content_for(:title) || "Lab Web" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -16,7 +16,7 @@
   <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
       <div class="container">
-        <a class="navbar-brand" href="<%= recipes_path %>">RecipeBook</a>
+        <a class="navbar-brand" href="<%= recipes_path %>">RecipeApp</a>
 
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
@@ -24,7 +24,7 @@
               <li class="nav-item">
                 <span class="navbar-text text-light me-3">
                   <%= current_user.email %> 
-                  (<%= current_user.role.capitalize %>)
+                  (<%= current_user.role&.capitalize || "Regular" %>)
                 </span>
               </li>
 

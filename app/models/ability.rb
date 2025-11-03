@@ -6,10 +6,12 @@ class Ability
 
     if user.admin?
       can :manage, :all
-    else
+    elsif user.persisted?
       can :read, Recipe
       can :create, Recipe
       can [:update, :destroy], Recipe, user_id: user.id
+    else
+      can :read, Recipe
     end
   end
 end

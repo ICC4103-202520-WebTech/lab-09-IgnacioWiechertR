@@ -1,12 +1,13 @@
 <div class="container my-5">
   <div class="row justify-content-center">
     <div class="col-lg-8">
-      <h1 class="mb-4 text-center">Create New Recipe</h1>
-      <div class="card p-4 shadow">
-        <%= render 'form', recipe: @recipe %>
-      </div>
-      <div class="text-center mt-3">
-        <%= link_to "Back to Recipes", recipes_path, class: "btn btn-outline-secondary" %>
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white text-center py-3 rounded-top">
+          <h2 class="mb-0">Create New Recipe</h2>
+        </div>
+        <div class="card-body p-4">
+          <%= render 'form', recipe: @recipe %>
+        </div>
       </div>
     </div>
   </div>

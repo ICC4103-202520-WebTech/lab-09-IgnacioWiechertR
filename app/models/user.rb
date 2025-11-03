@@ -6,12 +6,4 @@ class User < ApplicationRecord
 
   enum :role, { regular: 0, admin: 1 }
 
-  after_initialize :set_default_role, if: :new_record?
-
-  private
-
-  def set_default_role
-    self.role ||= :regular
-  end
-
 end
