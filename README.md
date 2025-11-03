@@ -47,8 +47,3 @@ This lab consolidates your knowledge of:
   - Any issues encountered and how you solved them.
   - The IP address where the app can be accessed.
 - Clean repository ready for evaluation.
-
-
-gem install kamal
-kamal init
-
