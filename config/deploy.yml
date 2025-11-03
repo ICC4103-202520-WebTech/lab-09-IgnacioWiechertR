@@ -2,12 +2,12 @@
 service: my-app
 
 # Name of the container image.
-image: my-user/my-app
+image: lab-09-Wiechert/my-app
 
 # Deploy to these servers.
 servers:
   web:
-    - 192.168.0.1
+    - 104.248.177.200
   # job:
   #   hosts:
   #     - 192.168.0.1
@@ -31,8 +31,8 @@ registry:
   # username: my-user
 
   # Always use an access token rather than real password (pulled from .kamal/secrets).
-  # password:
-  #   - KAMAL_REGISTRY_PASSWORD
+  password:
+    - KAMAL_REGISTRY_PASSWORD
 
 # Configure builder setup.
 builder:
